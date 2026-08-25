@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>IndustrIQ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#14181c;
+    --panel:#1b2025;
+    --panel-raised:#20262c;
+    --line:#2b323a;
+    --line-soft:#232a30;
+    --text:#e7eaec;
+    --text-muted:#8a939b;
+    --text-dim:#5c646c;
+    --amber:#e8a33d;
+    --amber-dim:#7a5a26;
+    --green:#6fcf97;
+    --green-dim:#33513f;
+    --red:#d9634a;
+    --red-dim:#5c2f26;
+    --mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --sans: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --radius: 3px;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(ellipse 1200px 600px at 50% -10%, #1d2329 0%, var(--bg) 60%);
+    color:var(--text);
+    font-family:var(--sans);
+    min-height:100vh;
+    padding:28px 16px 60px;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{transition-duration:0.01ms !important; animation-duration:0.01ms !important;}
+  }
+
+  .wrap{max-width:980px;margin:0 auto;}
+
+  /* ---------- header ---------- */
+  header{
+    display:flex;align-items:flex-end;justify-content:space-between;
+    padding-bottom:18px;margin-bottom:22px;
+    border-bottom:1px solid var(--line);
+    gap:16px;flex-wrap:wrap;
+  }
+  .brand{display:flex;align-items:baseline;gap:10px;}
+  .brand-mark{
+    font-family:var(--mono);font-weight:700;font-size:22px;letter-spacing:0.02em;
+    color:var(--text);
+  }
+  .brand-mark span{color:var(--amber);}
+  .brand-sub{
+    font-family:var(--mono);font-size:11px;color:var(--text-dim);
+    letter-spacing:0.14em;text-transform:uppercase;
+  }
+  .conn{
+    display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:12px;color:var(--text-muted);
+  }
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--text-dim);flex-shrink:0;}
+  .dot.ok{background:var(--green);box-shadow:0 0 6px var(--green);}
+  .dot.bad{background:var(--red);box-shadow:0 0 6px var(--red);}
+  .conn button{
+    font-family:var(--sans);font-size:11px;color:var(--text-muted);background:none;border:1px solid var(--line);
+    border-radius:var(--radius);padding:4px 9px;cursor:pointer;
+  }
+  .conn button:hover{color:var(--text);border-color:var(--text-dim);}
+  .conn button:focus-visible, .toggle button:focus-visible, input:focus-visible, .tile:focus-visible{
+    outline:2px solid var(--amber); outline-offset:2px;
+  }
+
+  .conn-row{display:flex;align-items:center;gap:10px;}
+  .api-input{
+    font-family:var(--mono);font-size:11px;background:var(--panel);border:1px solid var(--line);
+    color:var(--text-muted);padding:4px 7px;border-radius:var(--radius);width:172px;
+  }
+  .api-input:focus{color:var(--text);border-color:var(--text-dim);outline:none;}
+
+  /* ---------- mode toggle ---------- */
+  .toggle{
+    display:inline-flex;background:var(--panel);border:1px solid var(--line);border-radius:5px;
+    padding:3px;gap:2px;margin-bottom:20px;
+  }
+  .toggle button{
+    font-family:var(--mono);font-size:12px;letter-spacing:0.06em;text-transform:uppercase;
+    background:none;border:none;color:var(--text-muted);padding:8px 18px;border-radius:3px;cursor:pointer;
+    transition:background 0.15s, color 0.15s;
+  }
+  .toggle button.active{background:var(--panel-raised);color:var(--amber);box-shadow:inset 0 0 0 1px var(--line);}
+  .toggle button:hover:not(.active){color:var(--text);}
+
+  /* ---------- layout ---------- */
+  main{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media (max-width:760px){ main{grid-template-columns:1fr;} }
+
+  .panel{
+    background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:20px;
+  }
+  .panel-title{
+    font-family:var(--mono);font-size:11px;letter-spacing:0.12em;text-transform:uppercase;
+    color:var(--text-dim);margin:0 0 16px;display:flex;justify-content:space-between;align-items:center;
+  }
+
+  /* ---------- sliders ---------- */
+  .field{margin-bottom:16px;}
+  .field:last-child{margin-bottom:0;}
+  .field-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;}
+  .field-label{font-size:13px;color:var(--text-muted);}
+  .field-value{font-family:var(--mono);font-size:13px;color:var(--text);font-variant-numeric:tabular-nums;}
+  .field-value .unit{color:var(--text-dim);font-size:11px;margin-left:2px;}
+
+  input[type=range]{
+    -webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:2px;
+    background:var(--line);outline:none;cursor:pointer;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;width:14px;height:14px;border-radius:50%;
+    background:var(--amber);border:2px solid #14181c;cursor:pointer;
+    box-shadow:0 0 0 1px var(--amber-dim);
+  }
+  input[type=range]::-moz-range-thumb{
+    width:14px;height:14px;border-radius:50%;background:var(--amber);border:2px solid #14181c;cursor:pointer;
+  }
+
+  .run-btn{
+    width:100%;margin-top:18px;padding:11px;border-radius:var(--radius);border:1px solid var(--amber-dim);
+    background:linear-gradient(180deg, #3a2c15, #2c2211);color:var(--amber);
+    font-family:var(--mono);font-size:12px;letter-spacing:0.1em;text-transform:uppercase;
+    cursor:pointer;transition:filter 0.15s;
+  }
+  .run-btn:hover{filter:brightness(1.25);}
+  .run-btn:active{filter:brightness(0.9);}
+  .run-btn:disabled{opacity:0.45;cursor:default;filter:none;}
+
+  /* ---------- gauge ---------- */
+  .gauge-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;}
+  .gauge-readout{
+    font-family:var(--mono);font-weight:600;font-size:38px;color:var(--text);
+    letter-spacing:-0.01em;margin-top:4px;font-variant-numeric:tabular-nums;
+    transition:color 0.3s;
+  }
+  .gauge-readout.pending{color:var(--text-dim);}
+  .gauge-unit{font-family:var(--mono);font-size:12px;color:var(--text-dim);letter-spacing:0.1em;margin-top:-2px;}
+  .gauge-band-label{
+    font-family:var(--mono);font-size:11px;letter-spacing:0.1em;text-transform:uppercase;margin-top:10px;
+    padding:3px 10px;border-radius:10px;border:1px solid var(--line);color:var(--text-dim);
+  }
+  .gauge-band-label.low{color:var(--green);border-color:var(--green-dim);}
+  .gauge-band-label.mid{color:var(--amber);border-color:var(--amber-dim);}
+  .gauge-band-label.high{color:var(--red);border-color:var(--red-dim);}
+
+  .empty-state{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;
+    color:var(--text-dim);font-size:13px;text-align:center;padding:30px 10px;gap:6px;
+  }
+  .empty-state .big{font-family:var(--mono);font-size:12px;letter-spacing:0.08em;color:var(--text-muted);text-transform:uppercase;}
+
+  .error-box{
+    background:var(--red-dim);border:1px solid #7a3d30;color:#f3c9be;border-radius:var(--radius);
+    padding:11px 13px;font-size:12.5px;margin-top:14px;line-height:1.5;
+  }
+  .error-box b{color:#fff;}
+
+  /* ---------- optimize readout tiles ---------- */
+  .tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .tile{
+    background:var(--panel-raised);border:1px solid var(--line);border-radius:var(--radius);
+    padding:12px 13px;
+  }
+  .tile-label{font-size:10.5px;color:var(--text-dim);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:5px;}
+  .tile-value{font-family:var(--mono);font-size:17px;color:var(--text);font-variant-numeric:tabular-nums;}
+  .tile-unit{font-size:11px;color:var(--text-dim);margin-left:3px;}
+
+  .apply-btn{
+    width:100%;margin-top:14px;padding:9px;border-radius:var(--radius);border:1px solid var(--line);
+    background:none;color:var(--text-muted);font-family:var(--mono);font-size:11px;letter-spacing:0.08em;
+    text-transform:uppercase;cursor:pointer;
+  }
+  .apply-btn:hover{color:var(--green);border-color:var(--green-dim);}
+
+  footer{
+    margin-top:22px;padding-top:14px;border-top:1px solid var(--line);
+    display:flex;justify-content:space-between;color:var(--text-dim);font-family:var(--mono);font-size:11px;
+    flex-wrap:wrap;gap:8px;
+  }
+
+  /* ---------- auth gate ---------- */
+  .gate-screen{
+    min-height:calc(100vh - 56px);display:flex;align-items:center;justify-content:center;
+  }
+  .gate-card{
+    width:100%;max-width:360px;background:var(--panel);border:1px solid var(--line);border-radius:6px;
+    padding:28px 26px 24px;
+  }
+  .gate-brand{text-align:center;margin-bottom:22px;}
+  .gate-brand .brand-mark{font-size:24px;}
+  .gate-brand .brand-sub{margin-top:4px;}
+  .gate-tabs{display:flex;background:var(--panel-raised);border:1px solid var(--line);border-radius:5px;padding:3px;gap:2px;margin-bottom:20px;}
+  .gate-tabs button{
+    flex:1;font-family:var(--mono);font-size:11.5px;letter-spacing:0.06em;text-transform:uppercase;
+    background:none;border:none;color:var(--text-muted);padding:8px 6px;border-radius:3px;cursor:pointer;
+  }
+  .gate-tabs button.active{background:var(--panel);color:var(--amber);box-shadow:inset 0 0 0 1px var(--line);}
+  .gate-field{margin-bottom:14px;}
+  .gate-field label{
+    display:block;font-size:11px;color:var(--text-dim);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:6px;
+  }
+  .gate-field input{
+    width:100%;background:var(--panel-raised);border:1px solid var(--line);color:var(--text);
+    font-family:var(--sans);font-size:13.5px;padding:10px 11px;border-radius:var(--radius);
+  }
+  .gate-field input:focus{outline:none;border-color:var(--amber-dim);}
+  .gate-submit{
+    width:100%;margin-top:6px;padding:11px;border-radius:var(--radius);border:1px solid var(--amber-dim);
+    background:linear-gradient(180deg, #3a2c15, #2c2211);color:var(--amber);
+    font-family:var(--mono);font-size:12px;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;
+  }
+  .gate-submit:hover{filter:brightness(1.25);}
+  .gate-submit:disabled{opacity:0.45;cursor:default;}
+  .gate-note{
+    margin-top:16px;font-size:11px;line-height:1.6;color:var(--text-dim);text-align:center;
+  }
+  .gate-error{
+    background:var(--red-dim);border:1px solid #7a3d30;color:#f3c9be;border-radius:var(--radius);
+    padding:9px 11px;font-size:12px;margin-bottom:14px;line-height:1.5;
+  }
+  .gate-success{
+    background:var(--green-dim);border:1px solid #3f6b52;color:#c9f0da;border-radius:var(--radius);
+    padding:9px 11px;font-size:12px;margin-bottom:14px;line-height:1.5;
+  }
+  .signed-in{
+    display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:12px;color:var(--text-muted);
+  }
+  .signed-in b{color:var(--text);}
+  .signout-btn{
+    font-family:var(--sans);font-size:11px;color:var(--text-muted);background:none;border:1px solid var(--line);
+    border-radius:var(--radius);padding:4px 9px;cursor:pointer;
+  }
+  .signout-btn:hover{color:var(--red);border-color:var(--red-dim);}
+  #mainApp{display:none;}
+</style>
+</head>
+<body>
+
+<!-- ===== AUTH GATE ===== -->
+<div class="gate-screen" id="gateScreen">
+  <div class="gate-card">
+    <div class="gate-brand">
+      <div class="brand-mark">INDUSTR<span>IQ</span></div>
+      <div class="brand-sub">Power consumption model — control panel</div>
+    </div>
+
+    <div class="gate-tabs">
+      <button id="gateTabLogin" class="active">Sign in</button>
+      <button id="gateTabRegister">Create account</button>
+    </div>
+
+    <div id="gateMessage"></div>
+
+    <form id="gateForm">
+      <div class="gate-field">
+        <label for="gateUsername">Username</label>
+        <input id="gateUsername" autocomplete="username" spellcheck="false">
+      </div>
+      <div class="gate-field">
+        <label for="gatePassword">Password</label>
+        <input id="gatePassword" type="password" autocomplete="current-password">
+      </div>
+      <div class="gate-field" id="gateConfirmField" style="display:none;">
+        <label for="gateConfirm">Confirm password</label>
+        <input id="gateConfirm" type="password" autocomplete="new-password">
+      </div>
+      <button type="submit" class="gate-submit" id="gateSubmit">Sign in</button>
+    </form>
+
+    <div class="gate-note">Local demo login — accounts are stored for this artifact only, not encrypted for production use.</div>
+  </div>
+</div>
+
+<!-- ===== MAIN APP ===== -->
+<div id="mainApp">
+<div class="wrap">
+
+  <header>
+    <div>
+      <div class="brand"><span class="brand-mark">INDUSTR<span>IQ</span></span></div>
+      <div class="brand-sub">Power consumption model — control panel</div>
+    </div>
+    <div class="conn-row">
+      <div class="signed-in">Signed in as <b id="whoAmI"></b></div>
+      <button class="signout-btn" id="signOutBtn">Sign out</button>
+      <div class="conn"><span class="dot" id="connDot"></span><span id="connText">checking…</span></div>
+      <input class="api-input" id="apiUrl" value="http://127.0.0.1:8081" spellcheck="false">
+      <button id="pingBtn">Ping</button>
+    </div>
+  </header>
+
+  <div class="toggle" role="tablist" aria-label="Mode">
+    <button id="tabPredict" class="active" role="tab" aria-selected="true">Predict</button>
+    <button id="tabOptimize" role="tab" aria-selected="false">Optimize</button>
+  </div>
+
+  <main>
+    <!-- LEFT: inputs -->
+    <section class="panel" id="inputPanel">
+      <!-- filled by JS -->
+    </section>
+
+    <!-- RIGHT: output -->
+    <section class="panel" id="outputPanel">
+      <!-- filled by JS -->
+    </section>
+  </main>
+
+  <footer>
+    <span id="footLeft">No request sent yet</span>
+    <span>Model: industriq_model.keras · ANN, 6 inputs</span>
+  </footer>
+
+</div>
+</div>
+
+<script>
+  // ================= AUTH GATE =================
+  let gateMode = 'login'; // 'login' | 'register'
+  let currentUser = null;
+
+  const $g = sel => document.querySelector(sel);
+
+  const memoryStore = {}; // last-resort fallback if even localStorage is blocked
+
+  async function storageGet(key){
+    if (typeof window.storage !== 'undefined' && window.storage) {
+      try { return await window.storage.get(key, true); } catch(e) { /* fall through */ }
+    }
+    try {
+      const raw = localStorage.getItem('industriq_'+key);
+      return raw !== null ? { key, value: raw } : null;
+    } catch(e) {
+      return memoryStore[key] !== undefined ? { key, value: memoryStore[key] } : null;
+    }
+  }
+
+  async function storageSet(key, value){
+    if (typeof window.storage !== 'undefined' && window.storage) {
+      try { return await window.storage.set(key, value, true); } catch(e) { /* fall through */ }
+    }
+    try {
+      localStorage.setItem('industriq_'+key, value);
+      return { key, value };
+    } catch(e) {
+      memoryStore[key] = value;
+      return { key, value };
+    }
+  }
+
+  async function sha256(text){
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+  }
+
+  function setGateMode(m){
+    gateMode = m;
+    $g('#gateTabLogin').classList.toggle('active', m==='login');
+    $g('#gateTabRegister').classList.toggle('active', m==='register');
+    $g('#gateConfirmField').style.display = m==='register' ? 'block' : 'none';
+    $g('#gateSubmit').textContent = m==='register' ? 'Create account' : 'Sign in';
+    $g('#gateMessage').innerHTML = '';
+    $g('#gatePassword').autocomplete = m==='register' ? 'new-password' : 'current-password';
+  }
+  $g('#gateTabLogin').addEventListener('click', () => setGateMode('login'));
+  $g('#gateTabRegister').addEventListener('click', () => setGateMode('register'));
+
+  $g('#gateForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const username = $g('#gateUsername').value.trim();
+    const password = $g('#gatePassword').value;
+    const msg = $g('#gateMessage');
+    msg.innerHTML = '';
+
+    if(!username || !password){
+      msg.innerHTML = `<div class="gate-error">Enter a username and password.</div>`;
+      return;
+    }
+
+    const submitBtn = $g('#gateSubmit');
+    submitBtn.disabled = true;
+
+    try{
+      if(gateMode === 'register'){
+        const confirm = $g('#gateConfirm').value;
+        if(password !== confirm){
+          msg.innerHTML = `<div class="gate-error">Passwords don't match.</div>`;
+          return;
+        }
+        if(password.length < 4){
+          msg.innerHTML = `<div class="gate-error">Password must be at least 4 characters.</div>`;
+          return;
+        }
+        let existing = null;
+        try{ existing = await storageGet('user:'+username); }catch(e){ existing = null; }
+        if(existing){
+          msg.innerHTML = `<div class="gate-error">That username is already taken.</div>`;
+          return;
+        }
+        const hash = await sha256(password);
+        await storageSet('user:'+username, JSON.stringify({ hash, createdAt: Date.now() }));
+        msg.innerHTML = `<div class="gate-success">Account created. Signing you in…</div>`;
+        currentUser = username;
+        setTimeout(enterApp, 500);
+      } else {
+        let record = null;
+        try{ record = await storageGet('user:'+username); }catch(e){ record = null; }
+        if(!record){
+          msg.innerHTML = `<div class="gate-error">No account with that username. Try "Create account".</div>`;
+          return;
+        }
+        const parsed = JSON.parse(record.value);
+        const hash = await sha256(password);
+        if(hash !== parsed.hash){
+          msg.innerHTML = `<div class="gate-error">Incorrect password.</div>`;
+          return;
+        }
+        currentUser = username;
+        enterApp();
+      }
+    }catch(err){
+      msg.innerHTML = `<div class="gate-error">Something went wrong reaching account storage. Try again.</div>`;
+    }finally{
+      submitBtn.disabled = false;
+    }
+  });
+
+  function enterApp(){
+    $g('#gateScreen').style.display = 'none';
+    $g('#mainApp').style.display = 'block';
+    $g('#whoAmI').textContent = currentUser;
+    render();
+    checkHealth();
+  }
+
+  $g('#signOutBtn').addEventListener('click', () => {
+    currentUser = null;
+    $g('#mainApp').style.display = 'none';
+    $g('#gateScreen').style.display = 'flex';
+    $g('#gateUsername').value = '';
+    $g('#gatePassword').value = '';
+    $g('#gateMessage').innerHTML = '';
+    setGateMode('login');
+  });
+
+  // ================= MAIN APP =================
+  const FEATURES = [
+    { key:'Temperature',        label:'Temperature',         unit:'°C',  min:20,  max:60,  step:0.1, default:40 },
+    { key:'MachineUtilization', label:'Machine utilization',  unit:'%',   min:40,  max:100, step:0.1, default:70 },
+    { key:'ProductionRate',     label:'Production rate',      unit:'u/hr',min:50,  max:200, step:0.5, default:125 },
+    { key:'Humidity',           label:'Humidity',             unit:'%RH', min:30,  max:90,  step:0.1, default:60 },
+    { key:'LoadCurrent',        label:'Load current',         unit:'A',   min:25,  max:35,  step:0.05,default:30 },
+    { key:'PowerFactor',        label:'Power factor',         unit:'',    min:0.7, max:0.85,step:0.001,default:0.775 },
+  ];
+  const GAUGE_MIN = 0, GAUGE_MAX = 1200; // kW, calibrated from dataset (max observed ~1169)
+
+  let mode = 'predict';
+  let predictValues = Object.fromEntries(FEATURES.map(f => [f.key, f.default]));
+  let lastPrediction = null; // number | null
+  let optimizeTarget = 685;
+  let optimizeResult = null; // object | null
+  let connected = null; // null=unknown, true/false
+
+  const $ = sel => document.querySelector(sel);
+  const apiBase = () => $('#apiUrl').value.replace(/\/$/, '');
+
+  // ---------- connection check ----------
+  async function checkHealth(){
+    try{
+      const res = await fetch(apiBase() + '/health', { signal: AbortSignal.timeout(4000) });
+      connected = res.ok;
+    }catch(e){ connected = false; }
+    renderConn();
+  }
+  function renderConn(){
+    const dot = $('#connDot'), text = $('#connText');
+    dot.className = 'dot' + (connected===true?' ok':connected===false?' bad':'');
+    text.textContent = connected===true ? 'connected' : connected===false ? 'unreachable' : 'checking…';
+  }
+  $('#pingBtn').addEventListener('click', checkHealth);
+
+  // ---------- mode toggle ----------
+  $('#tabPredict').addEventListener('click', () => setMode('predict'));
+  $('#tabOptimize').addEventListener('click', () => setMode('optimize'));
+  function setMode(m){
+    mode = m;
+    $('#tabPredict').classList.toggle('active', m==='predict');
+    $('#tabPredict').setAttribute('aria-selected', m==='predict');
+    $('#tabOptimize').classList.toggle('active', m==='optimize');
+    $('#tabOptimize').setAttribute('aria-selected', m==='optimize');
+    render();
+  }
+
+  // ---------- render: input panel ----------
+  function renderInputPanel(){
+    const el = $('#inputPanel');
+    if(mode === 'predict'){
+      el.innerHTML = `
+        <div class="panel-title">Machine settings</div>
+        ${FEATURES.map(f => `
+          <div class="field">
+            <div class="field-head">
+              <span class="field-label">${f.label}</span>
+              <span class="field-value" id="val-${f.key}">${fmt(predictValues[f.key], f)}<span class="unit">${f.unit}</span></span>
+            </div>
+            <input type="range" id="in-${f.key}" min="${f.min}" max="${f.max}" step="${f.step}" value="${predictValues[f.key]}">
+          </div>
+        `).join('')}
+        <button class="run-btn" id="runPredict">Run prediction</button>
+        <div id="predictError"></div>
+      `;
+      FEATURES.forEach(f => {
+        $('#in-'+f.key).addEventListener('input', e => {
+          predictValues[f.key] = parseFloat(e.target.value);
+          $('#val-'+f.key).innerHTML = fmt(predictValues[f.key], f) + `<span class="unit">${f.unit}</span>`;
+        });
+      });
+      $('#runPredict').addEventListener('click', runPredict);
+    } else {
+      el.innerHTML = `
+        <div class="panel-title">Target output</div>
+        <div class="field">
+          <div class="field-head">
+            <span class="field-label">Desired power consumption</span>
+            <span class="field-value" id="val-target">${optimizeTarget}<span class="unit">kW</span></span>
+          </div>
+          <input type="range" id="in-target" min="${GAUGE_MIN}" max="${GAUGE_MAX}" step="1" value="${optimizeTarget}">
+        </div>
+        <button class="run-btn" id="runOptimize">Find settings</button>
+        <div id="optimizeError"></div>
+      `;
+      $('#in-target').addEventListener('input', e => {
+        optimizeTarget = parseFloat(e.target.value);
+        $('#val-target').innerHTML = optimizeTarget + '<span class="unit">kW</span>';
+      });
+      $('#runOptimize').addEventListener('click', runOptimize);
+    }
+  }
+
+  function fmt(v, f){
+    if(f.key === 'PowerFactor') return v.toFixed(3);
+    return (Math.round(v*10)/10).toString();
+  }
+
+  // ---------- render: output panel ----------
+  function renderOutputPanel(){
+    const el = $('#outputPanel');
+    if(mode === 'predict'){
+      el.innerHTML = `<div class="panel-title">Predicted output</div><div class="gauge-wrap" id="gaugeWrap"></div>`;
+      renderGauge(lastPrediction);
+    } else {
+      el.innerHTML = `<div class="panel-title">Recommended settings</div><div id="optOut"></div>`;
+      renderOptimizeOut();
+    }
+  }
+
+  function renderGauge(value){
+    const wrap = $('#gaugeWrap');
+    if(value === null){
+      wrap.innerHTML = `<div class="empty-state"><div class="big">Standing by</div>Set machine values and run a prediction to see the reading.</div>`;
+      return;
+    }
+    const clamped = Math.max(GAUGE_MIN, Math.min(GAUGE_MAX, value));
+    const frac = (clamped - GAUGE_MIN) / (GAUGE_MAX - GAUGE_MIN);
+    const angle = -90 + frac * 180; // -90deg .. +90deg
+
+    let band = 'low', bandText = 'Nominal';
+    if(value >= 950){ band='high'; bandText='Critical'; }
+    else if(value >= 700){ band='mid'; bandText='Elevated'; }
+
+    wrap.innerHTML = `
+      <svg viewBox="0 0 200 118" width="230">
+        <path d="M 14 106 A 86 86 0 0 1 186 106" fill="none" stroke="#2b323a" stroke-width="10" stroke-linecap="round"/>
+        <path d="M 14 106 A 86 86 0 0 1 76 24"  fill="none" stroke="var(--green)" stroke-width="10" stroke-linecap="round" opacity="0.55"/>
+        <path d="M 76 24 A 86 86 0 0 1 141 27"  fill="none" stroke="var(--amber)" stroke-width="10" stroke-linecap="round" opacity="0.55"/>
+        <path d="M 141 27 A 86 86 0 0 1 186 106" fill="none" stroke="var(--red)"  stroke-width="10" stroke-linecap="round" opacity="0.55"/>
+        <g transform="translate(100,106) rotate(${angle})" style="transition: transform 0.7s cubic-bezier(.2,.9,.25,1);">
+          <line x1="0" y1="0" x2="0" y2="-72" stroke="#eee" stroke-width="2.5"/>
+          <circle cx="0" cy="0" r="6" fill="#eee"/>
+        </g>
+      </svg>
+      <div class="gauge-readout">${value.toFixed(1)}</div>
+      <div class="gauge-unit">kilowatts</div>
+      <div class="gauge-band-label ${band}">${bandText}</div>
+    `;
+  }
+
+  function renderOptimizeOut(){
+    const el = $('#optOut');
+    if(!optimizeResult){
+      el.innerHTML = `<div class="empty-state"><div class="big">Standing by</div>Set a target above and run the optimizer to see recommended settings.</div>`;
+      return;
+    }
+    el.innerHTML = `
+      <div class="tiles">
+        ${FEATURES.map(f => `
+          <div class="tile">
+            <div class="tile-label">${f.label}</div>
+            <div class="tile-value">${fmt(optimizeResult[f.key], f)}<span class="tile-unit">${f.unit}</span></div>
+          </div>
+        `).join('')}
+      </div>
+      <button class="apply-btn" id="applyBtn">Load into predictor →</button>
+    `;
+    $('#applyBtn').addEventListener('click', () => {
+      FEATURES.forEach(f => predictValues[f.key] = optimizeResult[f.key]);
+      lastPrediction = null;
+      setMode('predict');
+    });
+  }
+
+  // ---------- API calls ----------
+  async function runPredict(){
+    const btn = $('#runPredict');
+    btn.disabled = true; btn.textContent = 'Reading…';
+    $('#predictError').innerHTML = '';
+    try{
+      const res = await fetch(apiBase() + '/predict', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(predictValues),
+        signal: AbortSignal.timeout(15000),
+      });
+      if(!res.ok){
+        const body = await res.json().catch(()=>({}));
+        throw new Error(body.detail ? JSON.stringify(body.detail) : `Server returned ${res.status}`);
+      }
+      const data = await res.json();
+      lastPrediction = data.prediction;
+      connected = true; renderConn();
+      renderGauge(lastPrediction);
+      $('#footLeft').textContent = `Last prediction at ${new Date().toLocaleTimeString()}`;
+    }catch(e){
+      connected = false; renderConn();
+      $('#predictError').innerHTML = `<div class="error-box"><b>Prediction failed.</b> ${describeError(e)}</div>`;
+    }finally{
+      btn.disabled = false; btn.textContent = 'Run prediction';
+    }
+  }
+
+  async function runOptimize(){
+    const btn = $('#runOptimize');
+    btn.disabled = true; btn.textContent = 'Solving…';
+    $('#optimizeError').innerHTML = '';
+    try{
+      const res = await fetch(apiBase() + '/optimize', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ desired_power: optimizeTarget }),
+        signal: AbortSignal.timeout(20000),
+      });
+      if(!res.ok){
+        const body = await res.json().catch(()=>({}));
+        throw new Error(body.detail ? JSON.stringify(body.detail) : `Server returned ${res.status}`);
+      }
+      optimizeResult = await res.json();
+      connected = true; renderConn();
+      renderOptimizeOut();
+      $('#footLeft').textContent = `Last optimization at ${new Date().toLocaleTimeString()}`;
+    }catch(e){
+      connected = false; renderConn();
+      $('#optimizeError').innerHTML = `<div class="error-box"><b>Optimization failed.</b> ${describeError(e)}</div>`;
+    }finally{
+      btn.disabled = false; btn.textContent = 'Find settings';
+    }
+  }
+
+  function describeError(e){
+    if(e.name === 'TimeoutError' || e.name === 'AbortError') return 'The server took too long to respond. It may still be loading the model — try again in a moment.';
+    if(e.message && e.message.includes('Failed to fetch')) return `Can't reach ${apiBase()}. Confirm uvicorn is running and the address above is correct.`;
+    return e.message || 'Unknown error.';
+  }
+
+  function render(){
+    renderInputPanel();
+    renderOutputPanel();
+  }
+
+  setInterval(() => { if(currentUser) checkHealth(); }, 15000);
+  setGateMode('login');
+</script>
+</body>
+</html>
